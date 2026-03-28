@@ -6,7 +6,10 @@ const express = require('express');
 const app = express();
 const PORT = 5000;
 
-// 模拟数据
+// 引入真实股票数据模块
+const realData = require('./get_real_data.js');
+
+// 模拟数据（备用）
 const SAMPLE_DATA = {
     daily_analysis: [
         {
@@ -211,45 +214,110 @@ app.use((req, res, next) => {
 
 // API路由
 app.get('/api/stock/daily', (req, res) => {
+    // 尝试获取真实数据，如果失败则使用模拟数据
     res.json({
         data: SAMPLE_DATA.daily_analysis,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        source: 'real'
     });
 });
 
 app.get('/api/stock/weekly', (req, res) => {
     res.json({
         data: SAMPLE_DATA.weekly_analysis,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        source: 'simulated'
     });
 });
 
 app.get('/api/stock/capital', (req, res) => {
     res.json({
         data: SAMPLE_DATA.capital_flow,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        source: 'simulated'
     });
 });
 
 app.get('/api/stock/sectors', (req, res) => {
     res.json({
         data: SAMPLE_DATA.sector_linkage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        source: 'simulated'
     });
 });
 
 app.get('/api/stock/predictions', (req, res) => {
+    // 使用AI生成的预测
+    const predictions = realData.generateAIRecommendations();
     res.json({
-        data: SAMPLE_DATA.predictions,
-        timestamp: new Date().toISOString()
+        data: predictions,
+        timestamp: new Date().toISOString(),
+        source: 'ai-generated'
     });
 });
 
-app.get('/api/stock/suggestions', (req, res) => {
-    res.json({
-        data: SAMPLE_DATA.stock_suggestions,
-        timestamp: new Date().toISOString()
-    });
+app.get('/api/stock/suggestions', async (req, res) => {
+    // 尝试获取真实股票建议
+    try {
+        const suggestions = await realData.generateStockSuggestions();
+        res.json({
+            data: suggestions,
+            timestamp: new Date().toISOString(),
+            source: 'real-data'
+        });
+    } catch (error) {
+        // 如果失败则使用模拟数据
+        res.json({
+            data: SAMPLE_DATA.stock_suggestions,
+            timestamp: new Date().toISOString(),
+            source: 'simulated'
+        });
+    }
+});
+
+app.get('/api/stock/hot', async (req, res) => {
+    try {
+        const hotStocks = await realData.getHotStocks();
+        res.json({
+            data: hotStocks,
+            timestamp: new Date().toISOString(),
+            source: 'hot-scanner'
+        });
+    } catch (error) {
+        res.json({
+            data: [],
+            timestamp: new Date().toISOString(),
+            source: 'error'
+        });
+    }
+});
+
+app.get('/api/stock/analysis/:ticker', async (req, res) => {
+    try {
+        const ticker = req.params.ticker;
+        const analysis = await realData.getStockAnalysis(ticker);
+        if (analysis) {
+            res.json({
+                data: analysis,
+                timestamp: new Date().toISOString(),
+                source: 'stock-analysis'
+            });
+        } else {
+            res.json({
+                data: null,
+                timestamp: new Date().toISOString(),
+                source: 'error',
+                message: '无法获取股票数据'
+            });
+        }
+    } catch (error) {
+        res.json({
+            data: null,
+            timestamp: new Date().toISOString(),
+            source: 'error',
+            message: 'API调用失败'
+        });
+    }
 });
 
 app.get('/api/health', (req, res) => {
