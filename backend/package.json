@@ -1,0 +1,12 @@
+{
+  "name": "stock-analysis-backend",
+  "version": "1.0.0",
+  "description": "股票分析后端API服务器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

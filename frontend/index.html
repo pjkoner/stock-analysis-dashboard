@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票分析系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .time-controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .time-btn {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .time-btn.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .sector-list {
+            list-style: none;
+        }
+        
+        .sector-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .sector-item.active {
+            background: #eef5ff;
+            border-left: 4px solid #667eea;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .chart-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-container {
+            height: 300px;
+            width: 100%;
+        }
+        
+        .stock-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .stock-card {
+            border-bottom: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stock-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .stock-change {
+            color: #e74c3c;
+        }
+        
+        .stock-change.up {
+            color: #2ecc71;
+        }
+        
+        .ai-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .ai-icon {
+            font-size: 24px;
+            color: #667eea;
+        }
+        
+        .ai-prediction {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>智能股票分析系统</h1>
+                    <p>实时数据 · AI预测 · 智能选股</p>
+                </div>
+                <div class="time-controls">
+                    <div class="time-btn active">今日</div>
+                    <div class="time-btn">本周</div>
+                    <div class="time-btn">本月</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="sidebar">
+                <h2>板块选择</h2>
+                <ul class="sector-list">
+                    <li class="sector-item active" data-sector="科技">科技板块</li>
+                    <li class="sector-item" data-sector="金融">金融板块</li>
+                    <li class="sector-item" data-sector="医疗">医疗板块</li>
+                    <li class="sector-item" data-sector="新能源">新能源板块</li>
+                    <li class="sector-item" data-sector="消费">消费板块</li>
+                </ul>
+                
+                <h2 style="margin-top: 20px;">资金流向</h2>
+                <div id="capital-flow-summary">
+                    <p>净流入: <span style="color:#2ecc71;">+¥125亿</span></p>
+                    <p>流出板块: 医疗</p>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="chart-section">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        每日板块涨跌幅
+                    </div>
+                    <div class="chart-container" id="daily-chart"></div>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        资金流入热力图
+                    </div>
+                    <div class="chart-container" id="capital-chart"></div>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-area"></i>
+                        板块联动关系图
+                    </div>
+                    <div class="chart-container" id="sector-chart"></div>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-pie"></i>
+                        本周表现分析
+                    </div>
+                    <div class="chart-container" id="weekly-chart"></div>
+                </div>
+            </div>
+
+            <div class="stock-panel">
+                <h2>个股滚动展示</h2>
+                <div class="stock-card">
+                    <div class="stock-name">腾讯控股 (00700)</div>
+                    <div>¥350.2 <span class="stock-change up">+2.3%</span></div>
+                    <p>科技板块龙头，业务多元化</p>
+                </div>
+                <div class="stock-card">
+                    <div class="stock-name">宁德时代 (300750)</div>
+                    <div>¥180.5 <span class="stock-change up">+5.8%</span></div>
+                    <p>新能源龙头，技术领先</p>
+                </div>
+                <div class="stock-card">
+                    <div class="stock-name">招商银行 (600036)</div>
+                    <div>¥32.8 <span class="stock-change up">+1.2%</061>
+                    <p>稳健经营，盈利能力强</p>
+                </div>
+                <div class="stock-card">
+                    <div class="stock-name">迈瑞医疗 (300760)</div>
+                    <div>¥280.0 <span class="stock-change">-0.8%</span></div>
+                    <p>医疗设备龙头，短期波动</p>
+                </div>
+                <div class="stock-card">
+                    <div class="stock-name">贵州茅台 (600519)</div>
+                    <div>¥1500.0 <span class="stock-change up">+0.5%</span></div>
+                    <p>消费品龙头，品牌价值高</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-section">
+            <div class="ai-header">
+                <i class="fas fa-brain ai-icon"></i>
+                <h2>AI建议与预测</h2>
+            </div>
+            
+            <div class="ai-prediction">
+                <h3>板块预测</h3>
+                <p>新能源板块: <strong>强烈买入</strong> (预测涨幅: +4.2%)</p>
+                <p>科技板块: <strong>买入</strong> (预测涨幅: +2.5%)</p>
+                <p>医疗板块: <strong>观望</strong> (预测涨幅: -0.5%)</p>
+            </div>
+            
+            <div class="ai-prediction">
+                <h3>选股策略</h3>
+                <p>建议策略: <strong>价值投资 + 趋势追踪</strong></p>
+                <p>优选股票: 腾讯控股、宁德时代</p>
+                <p>风险提示: 医疗板块资金流出，短期谨慎</p>
+            </div>
+            
+            <div class="ai-prediction">
+                <h3>操作建议</h3>
+                <p>1. 重点关注新能源板块，持续流入资金</p>
+                <p>2. 科技板块与新能源联动性强，可关注相关个股</p>
+                <p>3. 医疗板块暂时回避，等待资金回流信号</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>股票分析系统 © 2026 | 数据更新: <span id="update-time">2026-03-29 01:33</span></p>
+            <p>注意: 投资有风险，决策需谨慎</p>
+        </div>
+    </div>
+
+    <!-- API集成 -->
+    <script src="js/api-integration.js"></script>
+    <script>
+        // 从后端API获取真实数据
+        async function fetchDataAndRender() {
+            try {
+                console.log('开始从API获取数据...');
+                
+                // 获取每日数据
+                const dailyResponse = await fetch('http://localhost:5000/api/stock/daily');
+                const dailyData = await dailyResponse.json();
+                console.log('每日数据:', dailyData);
+                
+                // 获取资金数据
+                const capitalResponse = await fetch('http://localhost:5000/api/stock/capital');
+                const capitalData = await capitalResponse.json();
+                console.log('资金数据:', capitalData);
+                
+                // 获取预测数据
+                const predictionsResponse = await fetch('http://localhost:5000/api/stock/predictions');
+                const predictionsData = await predictionsResponse.json();
+                console.log('预测数据:', predictionsData);
+                
+                // 获取选股建议
+                const suggestionsResponse = await fetch('http://localhost:5000/api/stock/suggestions');
+                const suggestionsData = await suggestionsResponse.json();
+                console.log('选股建议:', suggestionsData);
+                
+                // 更新UI
+                updateCharts(dailyData.data, capitalData.data, predictionsData.data);
+                updateStockPanel(suggestionsData.data);
+                updateAIRecommendations(predictionsData.data, suggestionsData.data);
+                
+                document.getElementById('update-time').textContent = new Date().toLocaleString();
+                return true;
+            } catch (error) {
+                console.error('获取数据失败:', error);
+                // 使用模拟数据
+                initChartsWithMockData();
+                return false;
+            }
+        }
+        
+        // 模拟图表数据（备用）
+        function initChartsWithMockData() {
+            const dailyChartEl = document.getElementById('daily-chart');
+            const capitalChartEl = document.getElementById('capital-chart');
+            const sectorChartEl = document.getElementById('sector-chart');
+            const weeklyChartEl = document.getElementById('weekly-chart');
+            
+            // 每日涨跌幅柱状图
+            dailyChartEl.innerHTML = `
+                <div style="height: 100%; padding:10px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin-bottom: 10px;">科技板块: +3.5%</h3>
+                    <div style="height: 40px; background: #2ecc71; width: 100%;"></div>
+                    <h3 style="margin-bottom: 10px;">金融板块: +2.1%</h3>
+                    <div style="height: 25px; background: #2ecc71; width: 100%;"></div>
+                    <h3 style="margin-bottom: 10px;">医疗板块: -1.2%</h3>
+                    <div style="height: 15px; background: #e74c3c; width: 100%;"></div>
+                    <h3 style="margin-bottom: 10px;">新能源板块: +4.8%</h3>
+                    <div style="height: 45px; background: #2ecc71; width: 100%;"></div>
+                    <h3 style="margin-bottom: 10px;">消费板块: +0.5%</h3>
+                    <div style="height: 10px; background: #2ecc71; width: 100%;"></div>
+                </div>
+            `;
+            
+            // 资金热力图
+            capitalChartEl.innerHTML = `
+                <div style="height: 100%; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px;">资金流向强度</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div style="background: #3498db; height: 60px; color: white; text-align: center; padding: 5px;">科技<br>¥150亿</div>
+                        <div style="background: #2ecc71; height: 40px; color: white; text-align: center; padding: 5px;">新能源<br>¥120亿</div>
+                        <div style="background: #3498db; height: 30px; color: white; text-align: center; padding: 5px;">金融<br>¥80亿</div>
+                        <div style="background: #e74c3c; height: 20px; color: white; text-align: center; padding: 5px;">医疗<br>¥60亿</div>
+                        <div style="background: #3498db; height: 25px; color: white; text-align: center; padding: 5px;">消费<br>¥70亿</div>
+                    </div>
+                </div>
+            `;
+            
+            // 板块联动图
+            sectorChartEl.innerHTML = `
+                <div style="height: 100%; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px;">板块联动关系</h3>
+                    <div style="display: flex; justify-content: space-around; align-items: center; height: 200px;">
+                        <div style="background: #667eea; width: 80px; height: 80px; border-radius: 50%; color: white; text-align: center; padding: 25px;">科技</div>
+                        <div style="background: #764ba2; width: 70px; height: 70px; border-radius: 50%; color: white; text-align: center; padding: 20px;">新能源</div>
+                        <div style="background: #3498db; width: 60px; height: 60px; border-radius: 50%; color: white; text-align: center; padding: 15px;">金融</div>
+                        <div style="background: #2ecc71; width: 50px; height: 50px; border-radius: 50%; color: white; text-align: center; padding: 10px;">消费</div>
+                        <div style="background: #e74c3c; width: 50px; height: 50px; border-radius: 50%; color: white; text-align: center; padding: 10px;">医疗</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">连线表示关联强度</div>
+                </div>
+            `;
+            
+            // 本周分析图
+            weeklyChartEl.innerHTML = `
+                <div style="height: 100%; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px;">本周累积涨跌幅</h3>
+                    <div style="display: flex; align-items: end; height: 150px;">
+                        <div style="width: 20%; background: #667eea; height: 80px; margin-right: 10px; color: white; text-align: center; padding-top: 10px;">科技<br>+8.2%</div>
+                        <div style="width: 20%; background: #764ba2; height: 120px; margin-right: 10px; color: white; text-align: center; padding-top: 10px;">新能源<br>+12.8%</div>
+                        <div style="width: 20%; background: #3498db; height: 45px; margin-right: 10px; color: white; text-align: center; padding-top: 10px;">金融<br>+4.5%</div>
+                        <div style="width: 20%; background: #e74c3c; height: 30px; margin-right: 10px; color: white; text-align: center; padding-top: 10px;">医疗<br>-3.1%</div>
+                        <div style="width: 20%; background: #2ecc71; height: 12px; color: white; text-align: center; padding-top: 10px;">消费<br>+1.2%</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 板块选择交互
+        document.querySelectorAll('.sector-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sector-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                
+                const sector = this.getAttribute('data-sector');
+                alert(`已选择${sector}板块，正在加载数据...`);
+            });
+        });
+        
+        // 时间选择交互
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                
+                const timePeriod = this.textContent;
+                alert(`已切换至${timePeriod}分析模式`);
+            });
+        });
+        
+        // 初始化图表
+        initCharts();
+        
+        // 更新时间
+        document.getElementById('update-time').textContent = new Date().toLocaleString();
+        
+        // 模拟数据更新
+        setTimeout(() => {
+            document.getElementById('update-time').textContent = '数据正在更新...';
+            setTimeout(() => {
+                document.getElementById('update-time').textContent = new Date().toLocaleString();
+                alert('数据已更新完成！');
+            }, 2000);
+        }, 5000);
+    </script>
+</body>
+</html>
