@@ -1,37 +1,28 @@
 #!/bin/bash
 
-# 股票分析系统部署脚本
+# GitHub部署脚本
 
-echo "=== 股票分析系统部署 ==="
+echo "开始部署股票分析系统到GitHub..."
 
-# 检查是否安装了gh CLI
-if ! command -v gh &> /dev/null; then
-    echo "GitHub CLI (gh) 未安装，请先安装"
-    echo "安装方法: brew install gh 或 apt-get install gh"
-    exit 1
-fi
+# 1. 检查Git状态
+echo "1. 检查Git状态..."
+git status
 
-# 检查GitHub认证
-echo "检查GitHub认证..."
-gh auth status
-
-# 创建GitHub仓库
-echo "创建GitHub仓库..."
-gh repo create stock-analysis-dashboard --public --description "股票分析系统：每日/每周/资金流入板块分析，AI建议和预测" --confirm
-
-# 初始化Git
-echo "初始化Git仓库..."
-git init
+# 2. 提交所有更改
+echo "2. 提交所有更改..."
 git add .
-git commit -m "初始提交：股票分析系统"
+git commit -m "部署股票分析系统到GitHub"
 
-# 推送到GitHub
-echo "推送到GitHub..."
-git branch -M main
-git remote add origin https://github.com/$(gh api user --jq .login)/stock-analysis-dashboard.git
-git push -u origin main
+# 3. 创建GitHub仓库（需要GitHub认证）
+echo "3. 创建GitHub仓库..."
+# gh repo create stock-analysis-dashboard --public
 
-echo "=== 部署完成 ==="
-echo "前端访问地址: http://localhost:8000"
-echo "后端API地址: http://localhost:5000"
-echo "GitHub仓库: https://github.com/$(gh api user --jq .login)/stock-analysis-dashboard"
+# 4. 设置远程仓库
+echo "4. 设置远程仓库..."
+# git remote add origin https://github.com/yourusername/stock-analysis-dashboard.git
+
+# 5. 推送代码
+echo "5. 推送代码..."
+# git push -u origin master
+
+echo "部署脚本已准备好。需要GitHub认证后执行步骤3-5。"
